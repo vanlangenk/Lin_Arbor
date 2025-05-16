@@ -1,1 +1,125 @@
-<h1>Lynn Arbor Project</h1><p>Welcome to the jungle.</p>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Lin Arbor Project</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .plant-label {
+            position: absolute;
+            color: red;
+            font-size: 8pt;
+            font-weight: bold;
+            text-shadow: -1px -1px 0 yellow, 1px -1px 0 yellow, -1px 1px 0 yellow, 1px 1px 0 yellow;
+            pointer-events: auto;
+        }
+        #container {
+            position: relative;
+            display: inline-block;
+        }
+        #plant-info {
+            margin-bottom: 20px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        #grid-toggle {
+            margin-bottom: 10px;
+        }
+        .grid {
+            position: absolute;
+            top: 0; left: 0;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Lynn Arbor Project</h1>
+    <div id="plant-info"></div>
+    <label id="grid-toggle">
+        <input type="checkbox" onclick="toggleGrid()"> Toggle Grid
+    </label>
+    <div id="container">
+        <img id="base-image" src="ndvi_map.png" alt="NDVI Map">
+        <canvas id="gridCanvas" class="grid"></canvas>
+        <div id="labels"></div>
+    </div>
+
+    <script>
+        const speciesData = [];
+
+        async function loadSpecies() {
+            const response = await fetch('../data/linwood_species_inventory.csv');
+            const text = await response.text();
+            const lines = text.split('\n').slice(1);
+            const infoContainer = document.getElementById("plant-info");
+            const labelsContainer = document.getElementById("labels");
+
+            for (const line of lines) {
+                if (!line.trim()) continue;
+                const parts = line.split(',');
+                const scientific = parts[0];
+                const common = parts[1];
+                const zone = parts[2];
+                const light = parts[3];
+                const appearance = parts[4];
+                const confidence = parts[5];
+                const x = parseFloat(parts[6]);
+                const y = parseFloat(parts[7]);
+
+                speciesData.push({ scientific, common, zone, light, appearance, confidence, x, y });
+
+                // Info panel
+                const infoHTML = `
+                    <p><strong>${common}</strong> (<a href="https://identify.plantnet.org/se/search?query=${encodeURIComponent(scientific)}" target="_blank">${scientific}</a>)<br>
+                    Zone: ${zone} | Light: ${light}<br>
+                    Appearance: ${appearance}</p>`;
+                infoContainer.innerHTML += infoHTML;
+
+                // Overlay label
+                const label = document.createElement("a");
+                label.href = `https://identify.plantnet.org/se/search?query=${encodeURIComponent(scientific)}`;
+                label.target = "_blank";
+                label.className = "plant-label";
+                label.style.left = `${x}px`;
+                label.style.top = `${y}px`;
+                label.innerText = `${common}\n(${scientific})`;
+                labelsContainer.appendChild(label);
+            }
+        }
+
+        function toggleGrid() {
+            const canvas = document.getElementById("gridCanvas");
+            const image = document.getElementById("base-image");
+            const show = document.querySelector('#grid-toggle input').checked;
+
+            canvas.width = image.width;
+            canvas.height = image.height;
+            const ctx = canvas.getContext("2d");
+
+            if (show) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.strokeStyle = "rgba(0,0,0,0.3)";
+                const spacing = 100;
+                for (let x = 0; x < canvas.width; x += spacing) {
+                    ctx.beginPath();
+                    ctx.moveTo(x, 0);
+                    ctx.lineTo(x, canvas.height);
+                    ctx.stroke();
+                }
+                for (let y = 0; y < canvas.height; y += spacing) {
+                    ctx.beginPath();
+                    ctx.moveTo(0, y);
+                    ctx.lineTo(canvas.width, y);
+                    ctx.stroke();
+                }
+                canvas.style.display = "block";
+            } else {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                canvas.style.display = "none";
+            }
+        }
+
+        window.onload = loadSpecies;
+    </script>
+</body>
+</html>
