@@ -2,39 +2,87 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Lin Arbor Project</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lin Arbor Overlay</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 40px; }
-    .plant { margin-bottom: 12px; }
-    .label { font-weight: bold; color: darkgreen; }
-    img { max-width: 100%; border: 2px solid #333; margin-bottom: 20px; }
+    canvas {
+      border: 2px solid black;
+    }
+    .label {
+      position: absolute;
+      font-size: 8pt;
+      background: rgba(255, 255, 255, 0.8);
+      padding: 2px 4px;
+      border-radius: 4px;
+      pointer-events: auto;
+    }
+    #container {
+      position: relative;
+      display: inline-block;
+    }
   </style>
 </head>
 <body>
-  <h1>Lin Arbor Project</h1>
-  <img src="plant_overlay.png" alt="NDVI Map" />
-  <div id="plantList">Loading plant data...</div>
-
+  <h2>Lin Arbor Plant Overlay</h2>
+  <div id="container">
+    <canvas id="ndviCanvas"></canvas>
+  </div>
   <script>
-    fetch('plant_data.json')
-      .then(response => response.json())
-      .then(data => {
-        const div = document.getElementById('plantList');
-        div.innerHTML = "";
-        data.forEach(p => {
-          div.innerHTML += `
-            <div class="plant">
-              <div class="label">${p["Common Name"] || "Unknown"} (${p["Scientific Name"] || "N/A"})</div>
-              Zone: ${p["Zone"] || "N/A"} | Light: ${p["Light Preference"] || "N/A"}<br/>
-              Appearance: ${p["Appearance"] || "N/A"}
-            </div>
-            <hr/>`;
-        });
-      })
-      .catch(err => {
-        document.getElementById('plantList').innerText = 'Failed to load plant data.';
-        console.error(err);
-      });
+    const imagePath = 'data/ndvi_map.png'; // Replace with your NDVI image path
+    const csvPath = 'data/linwood_species_inventory.csv';
+    const canvas = document.getElementById('ndviCanvas');
+    const ctx = canvas.getContext('2d');
+    const container = document.getElementById('container');
+
+    function createLabel(x, y, commonName, scientificName) {
+      const label = document.createElement('div');
+      label.className = 'label';
+      label.style.left = `${x}px`;
+      label.style.top = `${y}px`;
+
+      const sciLink = document.createElement('a');
+      sciLink.href = `https://identify.plantnet.org/#/search?text=${scientificName.replace(/ /g, '+')}`;
+      sciLink.textContent = `(${scientificName})`;
+      sciLink.target = '_blank';
+      sciLink.style.color = 'blue';
+
+      label.textContent = `${commonName} `;
+      label.appendChild(sciLink);
+      container.appendChild(label);
+    }
+
+    function loadCSV(data) {
+      const rows = data.trim().split('\n');
+      const headers = rows[0].split(',');
+      const xIndex = headers.indexOf('X');
+      const yIndex = headers.indexOf('Y');
+      const commonIndex = headers.indexOf('Common Name');
+      const sciIndex = headers.indexOf('Scientific Name');
+
+      for (let i = 1; i < rows.length; i++) {
+        const cols = rows[i].split(',');
+        const x = parseInt(cols[xIndex]);
+        const y = parseInt(cols[yIndex]);
+        const commonName = cols[commonIndex];
+        const scientificName = cols[sciIndex];
+        createLabel(x, y, commonName, scientificName);
+      }
+    }
+
+    async function loadData() {
+      const img = new Image();
+      img.onload = () => {
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx.drawImage(img, 0, 0);
+      };
+      img.src = imagePath;
+
+      const csvData = await fetch(csvPath).then(res => res.text());
+      loadCSV(csvData);
+    }
+
+    loadData();
   </script>
 </body>
 </html>
