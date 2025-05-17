@@ -54,8 +54,8 @@
     function loadCSV(data) {
       const rows = data.trim().split('\n');
       const headers = rows[0].split(',');
-      const xIndex = headers.indexOf('X');
-      const yIndex = headers.indexOf('Y');
+      const xIndex = headers.indexOf('x');
+      const yIndex = headers.indexOf('y');
       const commonIndex = headers.indexOf('Common Name');
       const sciIndex = headers.indexOf('Scientific Name');
 
