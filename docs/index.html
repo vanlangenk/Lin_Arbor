@@ -11,12 +11,13 @@
     }
     .label {
       position: absolute;
-      font-size: 8pt;
-      background: rgba(255, 255, 255, 0.8);
-      padding: 2px 4px;
-      border-radius: 4px;
+      font-size: 14pt;
+      background: rgba(255, 255, 255, 0.85);
+      padding: 4px 6px;
+      border-radius: 5px;
       pointer-events: auto;
       transform: translate(-50%, -50%);
+      white-space: nowrap;
     }
     #container {
       position: relative;
@@ -40,14 +41,16 @@
     function createLabel(x, y, commonName, scientificName) {
       const label = document.createElement('div');
       label.className = 'label';
-      label.style.left = `${Math.max(0, Math.min(canvas.width, x))}px`;
-      label.style.top = `${Math.max(0, Math.min(canvas.height, y))}px`;
+      label.style.left = `${x}px`;
+      label.style.top = `${y}px`;
 
+      const query = encodeURIComponent(scientificName.trim());
       const sciLink = document.createElement('a');
-      sciLink.href = `https://identify.plantnet.org/#/medias/search?text=${encodeURIComponent(scientificName)}`;
+      sciLink.href = `https://identify.plantnet.org/k-world-flora/species?search=${query}&sortBy=name&sortOrder=asc`;
       sciLink.textContent = `(${scientificName})`;
       sciLink.target = '_blank';
       sciLink.style.color = 'blue';
+      sciLink.style.textDecoration = 'none';
 
       label.textContent = `${commonName} `;
       label.appendChild(sciLink);
@@ -80,7 +83,6 @@
         canvas.width = img.width;
         canvas.height = img.height;
         ctx.drawImage(img, 0, 0);
-
         const csvData = await fetch(csvPath).then(res => res.text());
         loadCSV(csvData);
       };
