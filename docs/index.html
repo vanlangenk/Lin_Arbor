@@ -7,6 +7,7 @@
   <style>
     canvas {
       border: 2px solid black;
+      display: block;
     }
     .label {
       position: absolute;
@@ -15,6 +16,7 @@
       padding: 2px 4px;
       border-radius: 4px;
       pointer-events: auto;
+      transform: translate(-50%, -50%);
     }
     #container {
       position: relative;
@@ -27,9 +29,10 @@
   <div id="container">
     <canvas id="ndviCanvas"></canvas>
   </div>
+
   <script>
     const imagePath = './map.png';
-    const csvPath = './inventory.csv'; // renamed CSV
+    const csvPath = './inventory.csv';
     const canvas = document.getElementById('ndviCanvas');
     const ctx = canvas.getContext('2d');
     const container = document.getElementById('container');
@@ -54,31 +57,34 @@
     function loadCSV(data) {
       const rows = data.trim().split('\n');
       const headers = rows[0].split(',');
-      const xIndex = headers.indexOf('x');
-      const yIndex = headers.indexOf('y');
-      const commonIndex = headers.indexOf('Common Name');
-      const sciIndex = headers.indexOf('Scientific Name');
+      const xIndex = headers.findIndex(h => h.trim().toLowerCase() === 'x');
+      const yIndex = headers.findIndex(h => h.trim().toLowerCase() === 'y');
+      const commonIndex = headers.findIndex(h => h.trim().toLowerCase() === 'common name');
+      const sciIndex = headers.findIndex(h => h.trim().toLowerCase() === 'scientific name');
 
       for (let i = 1; i < rows.length; i++) {
         const cols = rows[i].split(',');
-        const x = parseInt(cols[xIndex]);
-        const y = parseInt(cols[yIndex]);
+        const x = parseFloat(cols[xIndex]);
+        const y = parseFloat(cols[yIndex]);
         const commonName = cols[commonIndex];
         const scientificName = cols[sciIndex];
-        createLabel(x, y, commonName, scientificName);
+        if (!isNaN(x) && !isNaN(y)) {
+          createLabel(x, y, commonName, scientificName);
+        }
       }
     }
 
     async function loadData() {
       const img = new Image();
-     img.onload = async () => {
-     canvas.width = img.width;
-     canvas.height = img.height;
-     ctx.drawImage(img, 0, 0);
+      img.onload = async () => {
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx.drawImage(img, 0, 0);
 
-  const csvData = await fetch(csvPath).then(res => res.text());
-  loadCSV(csvData);
-};
+        const csvData = await fetch(csvPath).then(res => res.text());
+        loadCSV(csvData);
+      };
+      img.src = imagePath;
     }
 
     loadData();
