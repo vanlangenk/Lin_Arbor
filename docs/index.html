@@ -40,11 +40,11 @@
     function createLabel(x, y, commonName, scientificName) {
       const label = document.createElement('div');
       label.className = 'label';
-      label.style.left = `${x}px`;
-      label.style.top = `${y}px`;
+      label.style.left = `${Math.max(0, Math.min(canvas.width, x))}px`;
+      label.style.top = `${Math.max(0, Math.min(canvas.height, y))}px`;
 
       const sciLink = document.createElement('a');
-      sciLink.href = `https://identify.plantnet.org/#/search?text=${scientificName.replace(/ /g, '+')}`;
+      sciLink.href = `https://identify.plantnet.org/#/medias/search?text=${encodeURIComponent(scientificName)}`;
       sciLink.textContent = `(${scientificName})`;
       sciLink.target = '_blank';
       sciLink.style.color = 'blue';
