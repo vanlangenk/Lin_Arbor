@@ -12,12 +12,12 @@
     .label {
       position: absolute;
       font-size: 14pt;
-      background: rgba(255, 255, 255, 0.85);
+      background: rgba(255, 255, 255, 0.8);
       padding: 4px 6px;
-      border-radius: 5px;
+      border-radius: 4px;
       pointer-events: auto;
       transform: translate(-50%, -50%);
-      white-space: nowrap;
+      font-family: Arial, sans-serif;
     }
     #container {
       position: relative;
@@ -38,19 +38,24 @@
     const ctx = canvas.getContext('2d');
     const container = document.getElementById('container');
 
+    function stripVariety(scientificName) {
+      return scientificName.split(/\s+var\./i)[0].trim();
+    }
+
     function createLabel(x, y, commonName, scientificName) {
       const label = document.createElement('div');
       label.className = 'label';
       label.style.left = `${x}px`;
       label.style.top = `${y}px`;
 
-      const query = encodeURIComponent(scientificName.trim());
+      const cleanedName = stripVariety(scientificName);
+      const encoded = encodeURIComponent(cleanedName);
+
       const sciLink = document.createElement('a');
-      sciLink.href = `https://identify.plantnet.org/k-world-flora/species?search=${query}&sortBy=name&sortOrder=asc`;
+      sciLink.href = `https://identify.plantnet.org/k-world-flora/species?search=${encoded}&sortBy=name&sortOrder=asc`;
       sciLink.textContent = `(${scientificName})`;
       sciLink.target = '_blank';
       sciLink.style.color = 'blue';
-      sciLink.style.textDecoration = 'none';
 
       label.textContent = `${commonName} `;
       label.appendChild(sciLink);
